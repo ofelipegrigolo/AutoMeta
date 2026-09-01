@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "autometa",
+    "slug": "autometa",
+    "scheme": "autometa",
+    "version": "1.0.0",
+    "android": {
+      "package": "com.seuusuario.autometa",
+      "googleServicesFile": "./google-services.json"
+    },
+    "ios": {
+      "bundleIdentifier": "com.seuusuario.autometa",
+      "googleServicesFile": "./GoogleService-Info.plist"
+    }
+  }
+}
