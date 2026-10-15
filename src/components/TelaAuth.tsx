@@ -1,36 +1,48 @@
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import {
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
 } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
 
 export default function TelaAuth() {
-  // ... seu código da tela de autenticação
   const [isLogin, setIsLogin] = useState(true);
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
+  const [telefone, setTelefone] = useState('');
   const [senha, setSenha] = useState('');
+  const [confirmarSenha, setConfirmarSenha] = useState('');
   const [carregando, setCarregando] = useState(false);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
 
   const handleSubmit = async () => {
     const emailLimpo = email.trim();
     const senhaLimpa = senha.trim();
 
     if (!emailLimpo || !senhaLimpa || (!isLogin && !nome.trim())) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
+      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    if (!isLogin && senhaLimpa !== confirmarSenha.trim()) {
+      Alert.alert('Erro', 'As senhas não coincidem.');
       return;
     }
 
@@ -54,7 +66,7 @@ export default function TelaAuth() {
         await setDoc(doc(db, 'usuario', user.uid), {
           nome: nome.trim(),
           email: emailLimpo,
-          telefone: '',
+          telefone: telefone.trim(),
           dataCriacao: new Date(),
         });
 
@@ -82,57 +94,158 @@ export default function TelaAuth() {
     }
   };
 
+  const handleGoogleSignIn = () => {
+    // TODO: integrar login com Google (expo-auth-session / firebase)
+    console.log('Login com Google');
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.card}>
-        <Text style={styles.titulo}>{isLogin ? 'Entrar' : 'Criar Conta'}</Text>
-
-        {!isLogin && (
-          <TextInput
-            style={styles.input}
-            placeholder="Nome Completo"
-            placeholderTextColor="#a0a0a0"
-            value={nome}
-            onChangeText={setNome}
+      <StatusBar barStyle="light-content" backgroundColor="#0D0D0D" />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Logo */}
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../../assets/images/logotipo.png')}
+            style={{ width: 100, height: 24, marginRight: 6 }}
           />
+        </View>
+
+        {/* Título */}
+        <Text style={styles.titulo}>
+          {isLogin ? 'Entre na sua conta' : 'Crie sua conta'}
+        </Text>
+        <Text style={styles.subtitulo}>
+          {isLogin
+            ? 'Preencha os campos abaixo para acessar a plataforma.'
+            : 'Preencha os campos abaixo para começar a usar a plataforma.'}
+        </Text>
+
+        {/* Nome Completo (somente cadastro) */}
+        {!isLogin && (
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>
+              Nome Completo <Text style={styles.required}>*</Text>
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholderTextColor="#6B6B6B"
+              value={nome}
+              onChangeText={setNome}
+              autoCapitalize="words"
+            />
+          </View>
         )}
 
-        <TextInput
-          style={styles.input}
-          placeholder="E-mail"
-          placeholderTextColor="#a0a0a0"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          value={email}
-          onChangeText={setEmail}
-        />
+        {/* Email */}
+        <View style={styles.fieldContainer}>
+          <Text style={styles.label}>
+            Email <Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholderTextColor="#6B6B6B"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+          />
+        </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Senha"
-          placeholderTextColor="#a0a0a0"
-          secureTextEntry
-          value={senha}
-          onChangeText={setSenha}
-        />
+        {/* Telefone (somente cadastro) */}
+        {!isLogin && (
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Telefone</Text>
+            <TextInput
+              style={styles.input}
+              placeholderTextColor="#6B6B6B"
+              keyboardType="phone-pad"
+              value={telefone}
+              onChangeText={setTelefone}
+            />
+          </View>
+        )}
 
+        {/* Senha */}
+        <View style={styles.fieldContainer}>
+          <Text style={styles.label}>
+            Senha <Text style={styles.required}>*</Text>
+          </Text>
+          <View style={styles.passwordWrapper}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholderTextColor="#6B6B6B"
+              secureTextEntry={!mostrarSenha}
+              value={senha}
+              onChangeText={setSenha}
+            />
+            <TouchableOpacity onPress={() => setMostrarSenha(!mostrarSenha)}>
+              <Ionicons
+                name={mostrarSenha ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color="#6B6B6B"
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Confirmar Senha (somente cadastro) */}
+        {!isLogin && (
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>
+              Confirmar a Senha <Text style={styles.required}>*</Text>
+            </Text>
+            <View style={styles.passwordWrapper}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholderTextColor="#6B6B6B"
+                secureTextEntry={!mostrarConfirmarSenha}
+                value={confirmarSenha}
+                onChangeText={setConfirmarSenha}
+              />
+              <TouchableOpacity
+                onPress={() => setMostrarConfirmarSenha(!mostrarConfirmarSenha)}
+              >
+                <Ionicons
+                  name={mostrarConfirmarSenha ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                  color="#6B6B6B"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* Botão principal */}
         <TouchableOpacity
           style={[styles.botao, carregando && styles.botaoDesabilitado]}
           onPress={handleSubmit}
           disabled={carregando}
         >
           {carregando ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color="#0D0D0D" />
           ) : (
             <Text style={styles.textoBotao}>
-              {isLogin ? 'Entrar' : 'Cadastrar'}
+              {isLogin ? 'Entrar' : 'Criar conta'}
             </Text>
           )}
         </TouchableOpacity>
 
+        {/* Divisor "ou" */}
+        <Text style={styles.ouTexto}>ou</Text>
+
+        {/* Botão Google */}
+        <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
+          <Text style={styles.googleG}><FontAwesome name="google" size={32} color="white" /></Text>
+        </TouchableOpacity>
+
+        {/* Alternar Login / Cadastro */}
         <TouchableOpacity
           style={styles.trocarModo}
           onPress={() => setIsLogin(!isLogin)}
@@ -143,7 +256,7 @@ export default function TelaAuth() {
               : 'Já tem uma conta? Faça Login'}
           </Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -151,60 +264,118 @@ export default function TelaAuth() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f7',
-    justifyContent: 'center',
-    padding: 20,
+    backgroundColor: '#000000',
   },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: 24,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingTop: 100,
+    paddingBottom: 40,
+    alignItems: 'center',
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  logoText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
   },
   titulo: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#0f0f0f',
-    marginBottom: 20,
+    color: '#FFFFFF',
+    fontSize: 26,
+    fontWeight: '700',
+    marginBottom: 8,
     textAlign: 'center',
   },
+  subtitulo: {
+    color: '#9A9A9A',
+    fontSize: 13,
+    textAlign: 'center',
+    marginBottom: 32,
+    paddingHorizontal: 10,
+  },
+  fieldContainer: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  label: {
+    color: '#E5E5E5',
+    fontSize: 13,
+    marginBottom: 8,
+  },
+  required: {
+    color: '#E05252',
+  },
   input: {
-    height: 48,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 14,
-    color: '#0f0f0f',
-    marginBottom: 14,
+    backgroundColor: '#1A1A1A',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#2E2E2E',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: '#FFFFFF',
+    fontSize: 14,
+  },
+  passwordWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1A1A1A',
+    borderWidth: 1,
+    borderColor: '#2E2E2E',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 12,
+    color: '#FFFFFF',
+    fontSize: 14,
   },
   botao: {
-    backgroundColor: '#0f0f0f',
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
     paddingVertical: 14,
-    borderRadius: 12,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 12,
   },
   botaoDesabilitado: {
     opacity: 0.6,
   },
   textoBotao: {
-    color: '#fff',
-    fontWeight: '600',
+    color: '#0D0D0D',
     fontSize: 15,
+    fontWeight: '600',
+  },
+  ouTexto: {
+    color: '#6B6B6B',
+    fontSize: 13,
+    marginVertical: 16,
+  },
+  googleButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#1A1A1A',
+    borderWidth: 1,
+    borderColor: '#2E2E2E',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleG: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
   },
   trocarModo: {
-    marginTop: 16,
+    marginTop: 24,
     alignItems: 'center',
   },
   textoTrocarModo: {
-    color: '#00aa55',
-    fontSize: 14,
-    fontWeight: '600',
+    color: '#9A9A9A',
+    fontSize: 13,
+    fontWeight: '500',
   },
 });

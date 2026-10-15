@@ -1,46 +1,58 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import { onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, useColorScheme, View } from 'react-native';
-
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
-
-// Sobe um nível para acessar o firebaseConfig dentro da pasta src/
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { auth } from '../../firebaseConfig';
 
-// Importa a TelaAuth que está em src/components/TelaAuth.tsx
-import TelaAuth from '@/components/TelaAuth';
-
-SplashScreen.preventAutoHideAsync();
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const [user, setUser] = useState<User | null>(null);
-  const [carregando, setCarregando] = useState(true);
+export default function RootLayout() {
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const router = useRouter();
+  const segments = useSegments();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (usuarioLogado) => {
-      setUser(usuarioLogado);
-      setCarregando(false);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  if (carregando) {
+  useEffect(() => {
+    if (loading) return;
+
+    const inAuthScreen = segments[0] === 'auth' || segments[0] === 'index';
+
+    // Se NÃO estiver logado e tentar acessar uma rota protegida (ex: /home ou /profile)
+    if (!user && !inAuthScreen) {
+      router.replace('/auth');
+    }
+  }, [user, loading, segments]);
+
+  if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#0f0f0f" />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#ffffff" />
       </View>
     );
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      {!user ? <TelaAuth /> : <AppTabs />}
-    </ThemeProvider>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: '#000000' },
+      }}
+    />
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#000000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
