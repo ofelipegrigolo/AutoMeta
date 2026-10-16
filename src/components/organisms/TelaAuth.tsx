@@ -19,7 +19,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { auth, db } from '../../firebaseConfig';
+import { auth, db } from '../../../firebaseConfig';
 
 export default function TelaAuth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -112,7 +112,7 @@ export default function TelaAuth() {
         {/* Logo */}
         <View style={styles.logoContainer}>
           <Image
-            source={require('../../assets/images/logotipo.png')}
+            source={require('../../../assets/images/logotipo.png')}
             style={{ width: 100, height: 24, marginRight: 6 }}
           />
         </View>
