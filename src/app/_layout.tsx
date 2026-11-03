@@ -2,45 +2,44 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, useColorScheme, View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
-
-// Sobe um nível para acessar o firebaseConfig dentro da pasta src/
+import { AutometaSplash } from '@/components/autometa-splash';
+import TelaAuth from '@/components/TelaAuth';
 import { auth } from '../../firebaseConfig';
 
-// Importa a TelaAuth que está em src/components/TelaAuth.tsx
-import TelaAuth from '@/components/TelaAuth';
+// Mantém a splash nativa até a splash da autometa estar desenhada
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
-SplashScreen.preventAutoHideAsync();
+// Se o Firebase demorar ou falhar, o app abre mesmo assim após este tempo
+const TIMEOUT_SESSAO_MS = 3000;
 
-export default function TabLayout() {
+export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [user, setUser] = useState<User | null>(null);
-  const [carregando, setCarregando] = useState(true);
+  const [sessaoVerificada, setSessaoVerificada] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (usuarioLogado) => {
       setUser(usuarioLogado);
-      setCarregando(false);
+      setSessaoVerificada(true);
     });
 
-    return () => unsubscribe();
+    const timer = setTimeout(() => setSessaoVerificada(true), TIMEOUT_SESSAO_MS);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
-  if (carregando) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#0f0f0f" />
-      </View>
-    );
-  }
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      {!user ? <TelaAuth /> : <AppTabs />}
-    </ThemeProvider>
+    <View style={{ flex: 1, backgroundColor: colorScheme === 'dark' ? '#000' : '#fff' }}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        {sessaoVerificada && (user ? <AppTabs /> : <TelaAuth />)}
+        <AutometaSplash pronto={sessaoVerificada} />
+      </ThemeProvider>
+    </View>
   );
 }

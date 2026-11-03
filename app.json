@@ -4,13 +4,39 @@
     "slug": "autometa",
     "scheme": "autometa",
     "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "light",
+    "plugins": [
+      "expo-router",
+      "expo-notifications",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#000000"
+        }
+      ]
+    ],
     "android": {
       "package": "com.seuusuario.autometa",
-      "googleServicesFile": "./google-services.json"
+      "adaptiveIcon": {
+        "backgroundColor": "#000000",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      }
     },
     "ios": {
-      "bundleIdentifier": "com.seuusuario.autometa",
-      "googleServicesFile": "./GoogleService-Info.plist"
-    }
+      "bundleIdentifier": "com.seuusuario.autometa"
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ae325027-808a-4583-b7be-a3681fc7aa58"
+      }
+    },
+    "owner": "felipegrigolo"
   }
 }
